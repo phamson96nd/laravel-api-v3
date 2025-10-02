@@ -21,5 +21,5 @@ phases:
   post_build:
     on-failure: ABORT
     commands:
-      - echo 'post_build'
+      - echo 'post_build '
       - docker push 826895066148.dkr.ecr.ap-southeast-1.amazonaws.com/prod-laravel-api-v3-image:latest
