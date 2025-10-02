@@ -1,0 +1,25 @@
+version: 0.2
+
+phases:
+  install:
+    on-failure: ABORT
+    runtime-versions:
+      php: 8.2
+    # steps:
+  pre_build:
+    on-failure: ABORT
+    commands:
+      - echo 'Login to AWS ECR'
+      - aws ecr get-login-password --region ap-southeast-1 | docker login --username AWS --password-stdin 826895066148.dkr.ecr.ap-southeast-1.amazonaws.com
+    # steps:
+  build:
+    on-failure: ABORT
+    commands:
+      - docker build -t prod-laravel-api-v3-image .
+      - docker tag prod-laravel-api-v3-image:latest 826895066148.dkr.ecr.ap-southeast-1.amazonaws.com/prod-laravel-api-v3-image:latest
+    # steps:
+  post_build:
+    on-failure: ABORT
+    commands:
+      - echo 'post_build'
+      - docker push 826895066148.dkr.ecr.ap-southeast-1.amazonaws.com/prod-laravel-api-v3-image:latest
