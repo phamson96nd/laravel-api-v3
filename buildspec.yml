@@ -23,4 +23,9 @@ phases:
     on-failure: ABORT
     commands:
       - echo 'post_build '
-      - docker push $REPONSITORY/$IMAGE:$IMAGE_TAG
+      - docker push $REPONSITORY/$IMAGE:$
+      - printf '[{"name":"simple-app","imageUri":"%s"}]'
+        $REPONSITORY:$IMAGE_TAG > imagedefinitions.json
+      - cat imagedefinitions.json
+artifacts:
+  files: imagedefinitions.json
