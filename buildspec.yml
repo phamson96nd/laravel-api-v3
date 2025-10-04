@@ -24,7 +24,7 @@ phases:
     commands:
       - echo 'post_build '
       - docker push $REPONSITORY/$IMAGE:$IMAGE_TAG
-      - printf '[{"name":"simple-app","imageUri":"%s"}]' $REPONSITORY:$IMAGE_TAG > imagedefinitions.json
+      - printf '[{"name":"prod-laravel-api-v3","imageUri":"%s"}]' $REPONSITORY:$IMAGE_TAG > imagedefinitions.json
       - cat imagedefinitions.json
 artifacts:
   files: imagedefinitions.json
