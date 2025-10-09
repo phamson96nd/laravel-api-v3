@@ -12,9 +12,9 @@ ps: ## Show containers.
 	@docker compose ps
 
 build: ## Build all containers for PROD
-	@docker build --no-cache . -f ./Dockerfile
+	@docker build --no-cache . -f ./Dockerfile.local
 start: ## Start all containers
-	@docker compose -f docker-compose.local.yml up --force-recreate -d
+	@docker compose --env-file .env.example -f docker-compose.local.yml up --force-recreate -d
 stop: ## Stop all containers
 	@docker compose -f docker-compose.local.yml stop
 restart: stop start ## Restart all containers
