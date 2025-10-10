@@ -4,11 +4,17 @@ services:
         container_name: api
         build:
             context: .
+            dockerfile: Dockerfile.local
             target: php
             args:
-                - APP_ENV=${APP_ENV}
+                - APP_ENV=${APP_ENV:-local}
         environment:
-            - APP_ENV=${APP_ENV}
+            - APP_ENV=${APP_ENV:-local}
+            - DB_HOST=database
+            - DB_PORT=3306
+            - DB_DATABASE=${DB_DATABASE:-homestead}
+            - DB_USERNAME=${DB_USERNAME:-homestead}
+            - DB_PASSWORD=${DB_PASSWORD:-secret}
         working_dir: /app
         volumes:
             - ./:/app
@@ -16,11 +22,13 @@ services:
             - 8080:8080
         depends_on:
             - database
+        networks:
+            - laravel-network
     database:
         container_name: database
         image: mysql:8.0
         ports:
-            -   3306:3306
+            - 3306:3306
         environment:
             - MYSQL_DATABASE=${DB_DATABASE:-homestead}
             - MYSQL_USER=${DB_USERNAME:-homestead}
@@ -29,5 +37,42 @@ services:
             - TZ=${TZ:-Asia/Tokyo}
         volumes:
             - db-data:/var/lib/mysql
+        networks:
+            - laravel-network
+    scheduler:
+        build:
+            context: .
+            dockerfile: Dockerfile.local
+        container_name: laravel-scheduler
+        volumes:
+            - ./:/var/www/html
+        depends_on:
+            - api
+            - database
+        environment:
+            - APP_ENV=${APP_ENV:-local}
+            - DB_HOST=database
+            - DB_PORT=3306
+            - DB_DATABASE=${DB_DATABASE:-homestead}
+            - DB_USERNAME=${DB_USERNAME:-homestead}
+            - DB_PASSWORD=${DB_PASSWORD:-secret}
+        command: >
+            sh -c "
+                echo '⏳ Waiting for MySQL...';
+                until php -r 'try { new PDO(\"mysql:host=database;port=3306;dbname=${DB_DATABASE:-homestead}\", \"${DB_USERNAME:-homestead}\", \"${DB_PASSWORD:-secret}\"); echo \"✅ DB ready!\n\"; } catch (Exception $e) { echo \"waiting...\n\"; sleep(2); }'; do sleep 2; done;
+                echo '▶️ Start Laravel scheduler...';
+                while true; do
+                    php /var/www/html/artisan schedule:run --verbose --no-interaction;
+                    sleep 60;
+                done
+            "
+        networks:
+            - laravel-network
+
 volumes:
-    db-data: ~
+    db-data:
+
+networks:
+    laravel-network:
+        name: laravel-network
+        driver: bridge
