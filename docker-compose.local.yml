@@ -24,11 +24,10 @@ services:
             - database
         networks:
             - laravel-network
+
     database:
         container_name: database
         image: mysql:8.0
-        ports:
-            - 3306:3306
         environment:
             - MYSQL_DATABASE=${DB_DATABASE:-homestead}
             - MYSQL_USER=${DB_USERNAME:-homestead}
@@ -37,18 +36,19 @@ services:
             - TZ=${TZ:-Asia/Tokyo}
         volumes:
             - db-data:/var/lib/mysql
+        ports:
+            - 3306:3306
         networks:
             - laravel-network
+
     scheduler:
+        container_name: laravel-scheduler
         build:
             context: .
             dockerfile: Dockerfile.local
-        container_name: laravel-scheduler
         volumes:
-            - ./:/var/www/html
-        depends_on:
-            - api
-            - database
+            - ./:/app
+        working_dir: /app
         environment:
             - APP_ENV=${APP_ENV:-local}
             - DB_HOST=database
@@ -56,23 +56,27 @@ services:
             - DB_DATABASE=${DB_DATABASE:-homestead}
             - DB_USERNAME=${DB_USERNAME:-homestead}
             - DB_PASSWORD=${DB_PASSWORD:-secret}
-        command: >
-            sh -c "
-                echo '⏳ Waiting for MySQL...';
-                until php -r 'try { new PDO(\"mysql:host=database;port=3306;dbname=${DB_DATABASE:-homestead}\", \"${DB_USERNAME:-homestead}\", \"${DB_PASSWORD:-secret}\"); echo \"✅ DB ready!\n\"; } catch (Exception $e) { echo \"waiting...\n\"; sleep(2); }'; do sleep 2; done;
-                echo '▶️ Start Laravel scheduler...';
-                while true; do
-                    php /var/www/html/artisan schedule:run --verbose --no-interaction;
-                    sleep 60;
-                done
-            "
+        depends_on:
+            - api
+            - database
         networks:
             - laravel-network
+        command: >
+            sh -c "
+              echo '⏳ Waiting for MySQL...';
+              until nc -z database 3306; do sleep 2; done;
+              echo '✅ MySQL ready. Starting Laravel scheduler...';
+              # Vòng lặp chạy scheduler mỗi 60s
+              while true; do
+                php /app/artisan schedule:run --verbose --no-interaction;
+                sleep 60;
+              done
+            "
 
 volumes:
     db-data:
 
+
 networks:
     laravel-network:
-        name: laravel-network
         driver: bridge
