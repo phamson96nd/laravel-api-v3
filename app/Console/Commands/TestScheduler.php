@@ -27,6 +27,6 @@ class TestScheduler extends Command
     public function handle()
     {
         $this->info('✅ Scheduler task is running at ' . now());
-        Log::info('✅ Scheduler task executed at ' . now());
+        // Log::info('✅ Scheduler task executed at ' . now());
     }
 }
