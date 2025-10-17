@@ -36,6 +36,7 @@ fi
 php artisan clear
 php artisan optimize:clear
 php artisan migrate --force
+# php artisan queue:restart (ECS auto run)
 
 
 # Fix files ownership.

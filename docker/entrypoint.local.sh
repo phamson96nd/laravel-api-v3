@@ -12,15 +12,8 @@ else
 fi
 
 php artisan migrate
-php artisan optimize clear
+php artisan optimize:clear
 php artisan view:clear
 php artisan route:clear
 
-php-fpm &
-nginx -g "daemon off;" &
-
-while true; do
-    echo "Running Laravel scheduler at $(date)" >&2
-    php /app/artisan schedule:run --verbose --no-interaction 2>&1
-    sleep 60
-done
+exec "$@"

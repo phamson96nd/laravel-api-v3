@@ -3,6 +3,7 @@
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Route;
 use App\Http\Controllers\Api\PostController;
+use App\Jobs\SendWelcomeEmail;
 
 /*
 |--------------------------------------------------------------------------
@@ -32,4 +33,10 @@ Route::prefix('posts')->group(function () {
         Route::put('/{id}', [PostController::class, 'update']); // Update post
         Route::delete('/{id}', [PostController::class, 'destroy']); // Delete post
     });
+});
+
+Route::get('test-send-mail', function() {
+    SendWelcomeEmail::dispatch()->delay(now()->addMinutes(2));
+    SendWelcomeEmail::dispatch();
+    dd(2);
 });
