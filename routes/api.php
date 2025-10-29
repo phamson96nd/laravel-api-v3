@@ -26,7 +26,7 @@ Route::prefix('posts')->group(function () {
     Route::get('/', [PostController::class, 'index']); // List posts
     Route::get('/{id}', [PostController::class, 'show']); // Get post by ID
     Route::get('/slug/{slug}', [PostController::class, 'showBySlug']); // Get post by slug
-    
+
     // Protected routes (authentication required)
     Route::middleware('auth:sanctum')->group(function () {
         Route::post('/', [PostController::class, 'store']); // Create post
@@ -40,3 +40,10 @@ Route::get('test-send-mail', function() {
     SendWelcomeEmail::dispatch();
     dd(2);
 });
+
+use App\Http\Controllers\AuthController;
+
+Route::post('/login', [AuthController::class, 'login']);
+Route::post('/refresh', [AuthController::class, 'refresh']);
+Route::post('/logout', [AuthController::class, 'logout']);
+Route::get('/me', [AuthController::class, 'me'])->middleware(middleware: 'auth:api');
