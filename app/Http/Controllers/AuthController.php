@@ -41,20 +41,30 @@ class AuthController extends Controller
     {
         $plainToken = $request->bearerToken();
         $deviceFingerprint = substr($request->header('User-Agent') ?? '', 0, 255);
-        $token = RefreshToken::verifyRefreshToken($plainToken, $deviceFingerprint);
+
+        $token = RefreshToken::where('token', $plainToken)
+            ->where('revoked', false)
+            ->first();
+
         if (!$token) {
             return response()->json(['message' => 'Invalid or expired refresh token'], 401);
         }
 
-        $user = User::find($token->user_id);
-        $newAccess = JWTAuth::fromUser($user);
-        $newRefresh = RefreshToken::createRefreshToken($user, $deviceFingerprint, $token->id);
+        // Check device fingerprint
+        if ($deviceFingerprint && $token->device_fingerprint !== $deviceFingerprint) {
+            return response()->json(['message' => 'Device mismatch'],  403);
+        }
 
-        $token->update(['revoked' => true]);
+        // Check expiration
+        if ($token->isExpired()) {
+            return response()->json(['message' => 'Refresh token expired'], 401);
+        }
+
+        $user = $token->user;
+        $newAccess = JWTAuth::fromUser($user);
 
         return response()->json([
             'access_token' => $newAccess,
-            'refresh_token' => $newRefresh,
             'expires_in' => Auth::factory()->getTTL() * 60,
         ]);
     }
